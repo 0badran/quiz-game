@@ -10,6 +10,8 @@ class QuizInterFace:
         self.window = tk.Tk()
         self.window.title("Quiz Game")
         self.window.config(background=THEME_COLOR, padx=20, pady=20)
+
+        # Scoreboard
         self.score_board = tk.Label(
             text=f"Score: 0",
             fg="white",
@@ -18,22 +20,19 @@ class QuizInterFace:
         )
         self.score_board.grid(row=0, column=1)
 
+        # Canvas
         self.canvas = tk.Canvas(width=600, height=600, bg="white")
         self.canvas.grid(row=1, column=0, columnspan=2, pady=20, sticky="nsew")
         self.window.grid_rowconfigure(1, weight=1)
         self.window.grid_columnconfigure(0, weight=1)
         self.window.grid_columnconfigure(1, weight=1)
+
         self.question_text = self.canvas.create_text(
             300, 300, fill=THEME_COLOR, font=("Arial", 20, "italic"), anchor="center"
         )
-        self.canvas.bind("<Configure>", self.resize_canvas)
 
-        self.window.update_idletasks()
-        canvas_width = self.canvas.winfo_width()
-        self.canvas.coords(
-            self.question_text, canvas_width / 2, self.canvas.winfo_height() / 2
-        )
-        self.canvas.itemconfig(self.question_text, width=canvas_width * 0.8)
+        # Update canvas text on window resize
+        self.canvas.bind("<Configure>", self.resize_canvas)
 
         self.correct_image = tk.PhotoImage(file="images/true.png")
         self.true_button = tk.Button(image=self.correct_image, command=self.CheckTrue)
@@ -50,16 +49,24 @@ class QuizInterFace:
         self.window.mainloop()
 
     def resize_canvas(self, event):
+        # Make sure the text is always centered
         self.canvas.coords(self.question_text, event.width / 2, event.height / 2)
+        # Update the width of the text
         self.canvas.itemconfig(self.question_text, width=event.width * 0.8)
 
     def get_next_question(self):
         if self.quiz.still_has_questions():
             q_text = self.quiz.next_question()
-            self.canvas.itemconfig(self.question_text, text=q_text)
+            self.canvas.itemconfig(
+                self.question_text,
+                text=f"{self.quiz.current_question.difficulty.capitalize()}\n\n{q_text}",
+            )
             self.score_board.config(text=f"Score: {self.quiz.score}")
         else:
-            self.score_board.config(text=f"Score: {self.quiz.score}")
+            # Show score and disable buttons after all questions have been asked
+            self.score_board.config(
+                text=f"Score: {self.quiz.score} / {self.quiz.question_number}"
+            )
             self.canvas.itemconfig(
                 self.question_text, text="You've reached the end of the quiz"
             )
